@@ -33,11 +33,12 @@ def get_stoch_rsi_signal(np_closes):
 
     print("the current stoch rsi - k: {} d: {}".format(fastk[-1], fastd[-1]))
 
-    if fastk[-1] > fastd[-1] and fastd < 80:
+    if fastk[-1] > fastd[-1] and fastd[-1] < 80:
         return SIDE_BUY
-    elif fastk[-1] < fastd[-1] and fastk > 20:
+    elif fastk[-1] < fastd[-1] and fastk[-1] > 20:
         return SIDE_SELL
-    return None
+    else:
+        return None
 
 def get_rsi_signal(np_closes):
     RSI_PERIOD = 14
@@ -71,7 +72,7 @@ def order(side, quantity, symbol, order_type=ORDER_TYPE_MARKET):
         print("sending order")
         order = client.create_order(symbol=symbol, side=side, type=order_type, quantity=quantity)
         print(order)
-        
+
     except Exception as e:
         print("an exception occured - {}".format(e))
         return False
@@ -85,7 +86,6 @@ def on_close(ws):
     print('closed connection')
 
 def on_message(ws, message):
-    global closes, in_position
     
     # print('received message')
     json_message = json.loads(message)
@@ -103,8 +103,11 @@ def on_message(ws, message):
 
         np_closes = numpy.array(closes)
         stoch_signal = get_stoch_rsi_signal(np_closes)
-        rsi_signal = get_rsi_signal(np_closes)
+        print("stoch signal: {}".format(stoch_signal))
+        # rsi_signal = get_rsi_signal(np_closes)
         macd_signal = get_macd_signal(np_closes)
+        print("macd signal: {}".format(macd_signal))
+
 
         if(not in_position and stoch_signal == SIDE_BUY and macd_signal == SIDE_BUY):
             print("BUY SIGNAL")
